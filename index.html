@@ -65,8 +65,9 @@
     font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px;
     background: #fffdf9; color: var(--ink);
   }
-  input[type="text"] { flex: 1; }
-  .quick-add { display: flex; gap: 8px; margin-top: 12px; }
+  input[type="text"] { flex: 1 1 150px; min-width: 0; }
+  .quick-add { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .navbar-date { flex-wrap: wrap; }
 
   ul.entries { list-style: none; }
   ul.entries li {
