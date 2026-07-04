@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>子彈筆記 Bullet Journal</title>
+<style>
+  :root {
+    --paper: #faf6ef;
+    --paper-card: #ffffff;
+    --ink: #2c2a26;
+    --ink-soft: #6b6357;
+    --line: #e5ddd0;
+    --accent: #b3541e;
+    --accent-soft: #f3e3d3;
+    --done: #8a9a5b;
+    --shadow: 0 1px 3px rgba(60,50,30,.08), 0 4px 14px rgba(60,50,30,.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Segoe UI", "Microsoft JhengHei", "PingFang TC", sans-serif;
+    min-height: 100vh;
+  }
+  header {
+    background: var(--paper-card);
+    border-bottom: 2px solid var(--line);
+    padding: 14px 24px 0;
+    position: sticky; top: 0; z-index: 20;
+  }
+  .head-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  h1 { font-size: 1.3rem; letter-spacing: .05em; }
+  h1 .sub { font-size: .75rem; color: var(--ink-soft); font-weight: normal; margin-left: 8px; }
+  .head-tools { margin-left: auto; display: flex; gap: 8px; }
+  nav { display: flex; gap: 4px; margin-top: 10px; flex-wrap: wrap; }
+  nav button {
+    background: none; border: none; cursor: pointer;
+    font: inherit; font-size: .95rem; color: var(--ink-soft);
+    padding: 8px 14px; border-bottom: 3px solid transparent;
+  }
+  nav button.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  nav button:hover { color: var(--accent); }
+  main { max-width: 980px; margin: 0 auto; padding: 24px 20px 80px; }
+
+  .card {
+    background: var(--paper-card); border: 1px solid var(--line);
+    border-radius: 10px; box-shadow: var(--shadow);
+    padding: 18px 20px; margin-bottom: 18px;
+  }
+  .card h2 { font-size: 1.05rem; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .card h2 .hint { font-size: .78rem; color: var(--ink-soft); font-weight: normal; }
+
+  .btn {
+    background: var(--paper-card); border: 1px solid var(--line); border-radius: 6px;
+    padding: 6px 12px; cursor: pointer; font: inherit; font-size: .85rem; color: var(--ink);
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { opacity: .9; color: #fff; }
+  .btn.small { padding: 3px 8px; font-size: .78rem; }
+
+  .navbar-date { display: flex; align-items: center; gap: 8px; }
+  input[type="date"], input[type="month"], select, input[type="text"] {
+    font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px;
+    background: #fffdf9; color: var(--ink);
+  }
+  input[type="text"] { flex: 1; }
+  .quick-add { display: flex; gap: 8px; margin-top: 12px; }
+
+  ul.entries { list-style: none; }
+  ul.entries li {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 7px 6px; border-bottom: 1px dashed var(--line);
+  }
+  ul.entries li:last-child { border-bottom: none; }
+  .sym {
+    width: 22px; text-align: center; font-weight: bold; cursor: pointer;
+    font-family: Consolas, monospace; font-size: 1rem; flex-shrink: 0; margin-top: 1px;
+    user-select: none;
+  }
+  .sym.task { color: var(--ink); }
+  .sym.done { color: var(--done); }
+  .sym.migrated, .sym.scheduled { color: var(--ink-soft); }
+  .sym.event { color: var(--accent); }
+  .sym.note { color: var(--ink-soft); }
+  .etext { flex: 1; line-height: 1.5; word-break: break-word; }
+  .etext.done, .etext.migrated, .etext.scheduled { color: var(--ink-soft); }
+  .etext.cancelled { text-decoration: line-through; color: #b0a89f; }
+  .etext input { width: 100%; }
+  .eloc { font-size: .72rem; color: var(--ink-soft); background: var(--accent-soft); border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+  .eacts { display: flex; gap: 4px; opacity: 0; transition: opacity .15s; flex-shrink: 0; }
+  ul.entries li:hover .eacts { opacity: 1; }
+  .eacts button {
+    background: none; border: 1px solid var(--line); border-radius: 4px; cursor: pointer;
+    font-size: .72rem; padding: 2px 6px; color: var(--ink-soft);
+  }
+  .eacts button:hover { border-color: var(--accent); color: var(--accent); }
+  .empty { color: var(--ink-soft); font-size: .88rem; padding: 10px 4px; font-style: italic; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 760px) { .two-col { grid-template-columns: 1fr; } }
+
+  .mo-day { display: flex; gap: 10px; padding: 4px 2px; border-bottom: 1px solid #f2ece0; font-size: .88rem; }
+  .mo-day .dnum { width: 52px; color: var(--ink-soft); flex-shrink: 0; font-family: Consolas, monospace; cursor: pointer; }
+  .mo-day .dnum:hover { color: var(--accent); }
+  .mo-day.today { background: var(--accent-soft); border-radius: 4px; }
+  .mo-day .dents { flex: 1; }
+  .mo-day .dent { display: flex; gap: 6px; }
+  .mo-day .dent .sym { width: 14px; font-size: .85rem; }
+
+  .future-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .seg button { border: none; background: none; padding: 6px 14px; cursor: pointer; font: inherit; font-size: .85rem; color: var(--ink-soft); }
+  .seg button.active { background: var(--accent); color: #fff; }
+
+  .hgrid { border-collapse: collapse; font-size: .82rem; display: block; overflow: auto; max-height: 560px; max-width: 100%; }
+  .hgrid th, .hgrid td { border: 1px solid var(--line); padding: 4px 8px; text-align: center; white-space: nowrap; }
+  .hgrid thead th { background: var(--accent-soft); position: sticky; top: 0; z-index: 2; }
+  .hgrid td.hcell { cursor: pointer; min-width: 34px; }
+  .hgrid td.hcell.on { background: var(--done); color: #fff; font-weight: bold; }
+  .hgrid td.hcell:hover { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .hgrid .todaycol { background: #fdf3e7; }
+  .hgrid td.hcell.on.todaycol { background: var(--done); }
+  .hgrid th.hname { text-align: left; position: sticky; left: 0; background: var(--accent-soft); z-index: 1; }
+  .hgrid thead th.corner { position: sticky; left: 0; top: 0; z-index: 3; }
+  .hgrid td.sumcol { font-weight: bold; background: #f7f2e8; }
+
+  .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
+  .stat-card { background: #fffdf9; border: 1px solid var(--line); border-radius: 8px; padding: 12px; text-align: center; }
+  .stat-card .num { font-size: 1.5rem; font-weight: bold; color: var(--accent); }
+  .stat-card .lbl { font-size: .78rem; color: var(--ink-soft); margin-top: 2px; }
+  .stat-table { border-collapse: collapse; font-size: .85rem; width: 100%; }
+  .stat-table th, .stat-table td { border: 1px solid var(--line); padding: 6px 8px; text-align: center; }
+  .stat-table th { background: var(--accent-soft); }
+  .stat-table td.l { text-align: left; }
+  .stat-table tr.total td { font-weight: bold; background: #f7f2e8; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .82rem; color: var(--ink-soft); margin-top: 8px; }
+  .legend span b { font-family: Consolas, monospace; color: var(--ink); margin-right: 4px; }
+
+  .mig-card { border: 1px solid var(--line); border-radius: 8px; padding: 14px; margin-bottom: 12px; background: #fffdf9; }
+  .mig-card .qtext { font-size: 1rem; margin-bottom: 6px; }
+  .mig-card .qsrc { font-size: .78rem; color: var(--ink-soft); margin-bottom: 10px; }
+  .mig-card .qbtns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .soul { background: var(--accent-soft); border-radius: 8px; padding: 12px 16px; font-size: .88rem; margin-bottom: 16px; line-height: 1.7; }
+
+  .index-list { list-style: none; }
+  .index-list li { padding: 6px 4px; border-bottom: 1px dashed var(--line); display: flex; gap: 10px; }
+  .index-list a { color: var(--accent); text-decoration: none; cursor: pointer; }
+  .index-list a:hover { text-decoration: underline; }
+  .index-list .cnt { color: var(--ink-soft); font-size: .8rem; }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: #fff; padding: 10px 20px; border-radius: 8px;
+    font-size: .88rem; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 50;
+  }
+  .toast.show { opacity: .95; }
+
+  dialog {
+    border: 1px solid var(--line); border-radius: 10px; padding: 20px 24px;
+    box-shadow: var(--shadow); max-width: 420px; background: var(--paper-card); color: var(--ink);
+  }
+  dialog::backdrop { background: rgba(40,30,20,.35); }
+  dialog h3 { margin-bottom: 12px; font-size: 1rem; }
+  dialog .drow { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-row">
+    <h1>✒ 子彈筆記<span class="sub">追蹤過去・整理現在・規劃未來</span></h1>
+    <div class="head-tools">
+      <span id="syncPill" class="btn small" style="cursor:pointer;color:var(--ink-soft)" onclick="openSyncDlg()" title="雲端同步設定">☁ 未同步</span>
+      <button class="btn small" onclick="exportData()">匯出備份</button>
+      <button class="btn small" onclick="document.getElementById('importFile').click()">匯入</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
+    </div>
+  </div>
+  <nav id="nav">
+    <button data-view="daily">日誌</button>
+    <button data-view="monthly">月誌</button>
+    <button data-view="future">未來誌</button>
+    <button data-view="habits">習慣追蹤</button>
+    <button data-view="collections">群組</button>
+    <button data-view="stats">統計</button>
+    <button data-view="index">索引</button>
+    <button data-view="migrate">月末轉移</button>
+  </nav>
+</header>
+
+<main id="main"></main>
+<div class="toast" id="toast"></div>
+
+<dialog id="scheduleDlg">
+  <h3>排程到未來誌 &lt;</h3>
+  <p style="font-size:.85rem;color:var(--ink-soft)">這個任務重要、但近期還不需要做。選擇它所屬的未來月份：</p>
+  <div style="margin-top:10px"><select id="scheduleMonth" style="width:100%"></select></div>
+  <div class="drow">
+    <button class="btn" onclick="document.getElementById('scheduleDlg').close()">取消</button>
+    <button class="btn primary" onclick="confirmSchedule()">排程</button>
+  </div>
+</dialog>
+
+<dialog id="syncDlg" style="max-width:560px">
+  <h3>☁ 雲端同步設定</h3>
+  <p style="font-size:.82rem;color:var(--ink-soft);line-height:1.6">
+    設定後，你在任何裝置（電腦、手機）的變動都會自動同步。需先建立一個免費的
+    <b>Firebase Realtime Database</b> 專案，把設定值貼到下方。
+    <a href="https://console.firebase.google.com/" target="_blank" style="color:var(--accent)">開啟 Firebase 主控台 ↗</a>
+  </p>
+  <div id="sync-state-line" style="font-size:.82rem;margin:8px 0;padding:6px 10px;border-radius:6px;background:var(--accent-soft)"></div>
+  <label style="font-size:.82rem;font-weight:600">1. Firebase 設定值（整段貼上即可）</label>
+  <textarea id="sync-config" rows="7" placeholder='貼上 Firebase 網頁應用程式的設定，例如：
+const firebaseConfig = {
+  apiKey: "AIza...",
+  authDomain: "my-app.firebaseapp.com",
+  databaseURL: "https://my-app-default-rtdb.firebaseio.com",
+  projectId: "my-app",
+  ...
+};'
+    style="width:100%;font-family:Consolas,monospace;font-size:.78rem;margin:6px 0 12px;padding:8px;border:1px solid var(--line);border-radius:6px;background:#fffdf9;color:var(--ink)"></textarea>
+  <label style="font-size:.82rem;font-weight:600">2. 筆記本代號（等同密碼，各裝置要填一樣的）</label>
+  <div style="display:flex;gap:8px;margin:6px 0 4px">
+    <input type="text" id="sync-notebook" placeholder="例：nb-a8k3f9x2..." style="flex:1">
+    <button class="btn small" onclick="genNotebookId()">產生</button>
+  </div>
+  <p style="font-size:.75rem;color:var(--ink-soft)">⚠ 請設一段別人猜不到的字串並妥善保管；知道這串代號的人就能存取你的資料。</p>
+  <div class="drow" style="justify-content:space-between">
+    <button class="btn" onclick="disconnectSync();document.getElementById('syncDlg').close()" style="color:#c0392b">停止同步</button>
+    <span>
+      <button class="btn" onclick="document.getElementById('syncDlg').close()">關閉</button>
+      <button class="btn primary" onclick="connectSync()">連線並同步</button>
+    </span>
+  </div>
+</dialog>
+
+<script>
+/* ---------- 資料層 ---------- */
+const STORE_KEY = 'bujo_data_v1';
+let state = load();
+function load() {
+  let s = null;
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) s = JSON.parse(raw);
+  } catch (e) { console.error(e); }
+  return normalize(s || {});
+}
+function normalize(s) {
+  if (!Array.isArray(s.entries)) s.entries = [];
+  if (!Array.isArray(s.collections)) s.collections = [];
+  if (!Array.isArray(s.habits)) s.habits = [];
+  if (!s.habitLogs) s.habitLogs = {};
+  // 舊版群組中的習慣追蹤表 → 搬移到新的「習慣追蹤」
+  const oldHabits = s.collections.filter(c => c.kind === 'habit');
+  if (oldHabits.length) {
+    oldHabits.forEach(c => {
+      (c.habits || []).forEach(name => {
+        const id = uid();
+        s.habits.push({ id, name, kind: 'check', unit: '' });
+        Object.keys(c.checks || {}).forEach(k => {
+          if (k.startsWith(name + '|')) s.habitLogs[id + '|' + k.slice(name.length + 1)] = true;
+        });
+      });
+    });
+    s.collections = s.collections.filter(c => c.kind !== 'habit');
+  }
+  return s;
+}
+function saveLocal() { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+function save() {
+  saveLocal();
+  if (dbRef && !applyingRemote) pushToCloud();
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+/* ---------- 雲端同步（Firebase Realtime Database） ---------- */
+const SYNC_KEY = 'bujo_sync_v1';
+const CLIENT_ID = (function () {
+  let id = localStorage.getItem('bujo_client_id');
+  if (!id) { id = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('bujo_client_id', id); }
+  return id;
+})();
+let syncCfg = (function () {
+  try { const r = localStorage.getItem(SYNC_KEY); return r ? JSON.parse(r) : null; } catch (e) { return null; }
+})();
+let dbRef = null;
+let applyingRemote = false;
+let pushTimer = null;
+
+function saveSyncCfg(c) { if (c) localStorage.setItem(SYNC_KEY, JSON.stringify(c)); else localStorage.removeItem(SYNC_KEY); }
+function setSyncStatus(s, msg) {
+  const pill = document.getElementById('syncPill');
+  if (!pill) return;
+  const map = { off: ['☁ 未同步', 'var(--ink-soft)'], connecting: ['⟳ 連線中…', 'var(--accent)'],
+    on: ['☁ 已同步', 'var(--done)'], error: ['⚠ 同步錯誤', '#c0392b'] };
+  const [txt, color] = map[s] || map.off;
+  pill.textContent = msg || txt;
+  pill.style.color = color;
+  pill.style.borderColor = color;
+}
+function loadFirebaseSdk() {
+  if (typeof firebase !== 'undefined' && firebase.database) return Promise.resolve();
+  const urls = [
+    'https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js',
+    'https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js'
+  ];
+  return urls.reduce((p, url) => p.then(() => new Promise((res, rej) => {
+    const sc = document.createElement('script');
+    sc.src = url;
+    sc.onload = res;
+    sc.onerror = () => rej(new Error('無法載入 Firebase（請確認有網路連線）'));
+    document.head.appendChild(sc);
+  })), Promise.resolve());
+}
+function initSync() {
+  if (!syncCfg) { setSyncStatus('off'); return; }
+  setSyncStatus('connecting');
+  loadFirebaseSdk().then(() => {
+    try { if (!firebase.apps.length) firebase.initializeApp(syncCfg.config); } catch (e) {}
+    dbRef = firebase.database().ref('notebooks/' + syncCfg.notebookId);
+    dbRef.on('value', snap => {
+      const remote = snap.val();
+      if (!remote) { pushToCloud(true); setSyncStatus('on'); return; } // 雲端是空的 → 用本機資料建立
+      if (remote.updatedBy === CLIENT_ID) { setSyncStatus('on'); return; } // 自己剛寫入的回音
+      if ((remote.updatedAt || 0) < (state.updatedAt || 0)) { pushToCloud(true); return; } // 本機較新
+      applyingRemote = true;
+      state = normalize(remote);
+      saveLocal();
+      const ae = document.activeElement;
+      if (!ae || (ae.tagName !== 'INPUT' && ae.tagName !== 'TEXTAREA')) render();
+      applyingRemote = false;
+      setSyncStatus('on');
+      toast('已從雲端更新資料');
+    }, err => setSyncStatus('error', '⚠ ' + (err.code || '連線失敗')));
+    setSyncStatus('on');
+  }).catch(e => { setSyncStatus('error'); toast(e.message); });
+}
+function pushToCloud(immediate) {
+  if (!dbRef) return;
+  clearTimeout(pushTimer);
+  const doPush = () => {
+    state.updatedAt = Date.now();
+    state.updatedBy = CLIENT_ID;
+    saveLocal();
+    setSyncStatus('connecting');
+    dbRef.set(state)
+      .then(() => setSyncStatus('on'))
+      .catch(() => setSyncStatus('error', '⚠ 寫入失敗'));
+  };
+  if (immediate) doPush(); else pushTimer = setTimeout(doPush, 800);
+}
+function openSyncDlg() {
+  document.getElementById('sync-config').value = syncCfg ? cfgToText(syncCfg.config) : '';
+  document.getElementById('sync-notebook').value = syncCfg ? syncCfg.notebookId : '';
+  const line = document.getElementById('sync-state-line');
+  line.textContent = syncCfg ? '目前狀態：已設定同步。此裝置代號 ' + CLIENT_ID.slice(0, 6) + '…' : '目前狀態：尚未設定，資料只存在這台裝置的瀏覽器。';
+  document.getElementById('syncDlg').showModal();
+}
+function cfgToText(c) { return 'const firebaseConfig = ' + JSON.stringify(c, null, 2) + ';'; }
+function genNotebookId() {
+  document.getElementById('sync-notebook').value = 'nb-' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+}
+function parseFirebaseConfig(text) {
+  const cfg = {};
+  const re = /(\w+)\s*:\s*["']([^"']+)["']/g;
+  let m;
+  while ((m = re.exec(text))) cfg[m[1]] = m[2];
+  return cfg;
+}
+function connectSync() {
+  const text = document.getElementById('sync-config').value.trim();
+  let nb = document.getElementById('sync-notebook').value.trim();
+  const cfg = parseFirebaseConfig(text);
+  if (!cfg.apiKey || !cfg.projectId) {
+    alert('設定值看起來不完整：至少需要 apiKey 與 projectId。請把 Firebase 網頁應用程式的整段設定貼上。');
+    return;
+  }
+  if (!cfg.databaseURL) cfg.databaseURL = 'https://' + cfg.projectId + '-default-rtdb.firebaseio.com';
+  if (!nb) nb = 'nb-' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  syncCfg = { config: cfg, notebookId: nb };
+  saveSyncCfg(syncCfg);
+  document.getElementById('syncDlg').close();
+  toast('設定完成，重新載入以套用同步…');
+  setTimeout(() => location.reload(), 600);
+}
+function disconnectSync() {
+  if (dbRef) { dbRef.off(); dbRef = null; }
+  syncCfg = null;
+  saveSyncCfg(null);
+  setSyncStatus('off');
+  toast('已停止同步（本機資料保留）');
+}
+
+/* ---------- 日期工具 ---------- */
+function pad(n) { return String(n).padStart(2, '0'); }
+function todayStr() { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function thisMonth() { return todayStr().slice(0, 7); }
+function addDays(dateStr, n) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dt = new Date(y, m - 1, d + n);
+  return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;
+}
+function addMonths(monthStr, n) {
+  const [y, m] = monthStr.split('-').map(Number);
+  const dt = new Date(y, m - 1 + n, 1);
+  return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}`;
+}
+function daysInMonth(monthStr) {
+  const [y, m] = monthStr.split('-').map(Number);
+  return new Date(y, m, 0).getDate();
+}
+const WEEK = ['日','一','二','三','四','五','六'];
+function weekdayOf(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return WEEK[new Date(y, m - 1, d).getDay()];
+}
+function fmtMonth(monthStr) { const [y, m] = monthStr.split('-'); return `${y} 年 ${Number(m)} 月`; }
+function fmtDate(dateStr) {
+  const [y, m, d] = dateStr.split('-');
+  return `${y} 年 ${Number(m)} 月 ${Number(d)} 日（${weekdayOf(dateStr)}）`;
+}
+
+/* ---------- 符號 ---------- */
+function symbolOf(e) {
+  if (e.type === 'event') return { ch: '○', cls: 'event', tip: '事件' };
+  if (e.type === 'note') return { ch: '–', cls: 'note', tip: '筆記' };
+  switch (e.status) {
+    case 'done': return { ch: '✕', cls: 'done', tip: '已完成' };
+    case 'migrated': return { ch: '>', cls: 'migrated', tip: '已轉移' };
+    case 'scheduled': return { ch: '<', cls: 'scheduled', tip: '已排程' };
+    case 'cancelled': return { ch: '•', cls: 'note', tip: '已捨棄' };
+    default: return { ch: '•', cls: 'task', tip: '任務（點擊完成）' };
+  }
+}
+
+/* ---------- 資料操作 ---------- */
+function addEntry(type, text, loc) {
+  text = text.trim();
+  if (!text) return null;
+  const e = { id: uid(), type, status: type === 'task' ? 'open' : null, text, loc, created: todayStr() };
+  state.entries.push(e);
+  save();
+  return e;
+}
+function findEntry(id) { return state.entries.find(e => e.id === id); }
+function entriesAt(loc) {
+  return state.entries.filter(e => {
+    if (e.loc.view !== loc.view) return false;
+    if (loc.view === 'daily') return e.loc.date === loc.date;
+    if (loc.view === 'monthly' || loc.view === 'future') return e.loc.month === loc.month;
+    if (loc.view === 'collection') return e.loc.id === loc.id;
+    return false;
+  });
+}
+function locLabel(loc) {
+  if (loc.view === 'daily') return `日誌 ${loc.date}`;
+  if (loc.view === 'monthly') return `月誌 ${fmtMonth(loc.month)}`;
+  if (loc.view === 'future') return `未來誌 ${fmtMonth(loc.month)}`;
+  if (loc.view === 'collection') {
+    const c = state.collections.find(c => c.id === loc.id);
+    return `群組「${c ? c.name : '?'}」`;
+  }
+  return '';
+}
+
+/* 轉移：原任務標記，並在目標位置建立新任務 */
+function migrateEntry(id, targetLoc, mark) {
+  const e = findEntry(id);
+  if (!e) return;
+  e.status = mark; // 'migrated' or 'scheduled'
+  state.entries.push({ id: uid(), type: 'task', status: 'open', text: e.text, loc: targetLoc, created: todayStr() });
+  save();
+  render();
+  toast(mark === 'migrated' ? `已轉移到 ${locLabel(targetLoc)}` : `已排程到 ${locLabel(targetLoc)}`);
+}
+
+/* ---------- UI 狀態 ---------- */
+let view = 'daily';
+let curDate = todayStr();
+let curMonth = thisMonth();
+let curYear = Number(todayStr().slice(0, 4));
+let curCollection = null;
+let scheduleTargetId = null;
+let habitMode = 'month';   // 習慣追蹤：month | year
+let statsMode = 'month';   // 統計：month | year
+let habitYearMetric = 'sum'; // 年統計數值圖：sum | avg
+
+const $main = document.getElementById('main');
+document.querySelectorAll('#nav button').forEach(b => {
+  b.onclick = () => { view = b.dataset.view; render(); };
+});
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.remove('show'), 2200);
+}
+function esc(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------- 共用：項目列表 ---------- */
+function renderEntryList(entries, opts = {}) {
+  if (!entries.length) return `<div class="empty">${opts.emptyMsg || '（尚無紀錄）'}</div>`;
+  return `<ul class="entries">` + entries.map(e => {
+    const s = symbolOf(e);
+    const tcls = e.status && e.status !== 'open' ? e.status : '';
+    const acts = [];
+    if (e.type === 'task' && e.status === 'open') {
+      acts.push(`<button onclick="doComplete('${e.id}')" title="完成">✕ 完成</button>`);
+      if (e.loc.view === 'daily')
+        acts.push(`<button onclick="doMigrateTomorrow('${e.id}')" title="轉移到明天">&gt; 明天</button>`);
+      acts.push(`<button onclick="doMigrateNextMonth('${e.id}')" title="轉移到下個月月誌">&gt; 下月</button>`);
+      acts.push(`<button onclick="openSchedule('${e.id}')" title="排程到未來誌">&lt; 未來</button>`);
+      acts.push(`<button onclick="doCancel('${e.id}')" title="不再重要，畫刪除線捨棄">～ 捨棄</button>`);
+    }
+    if (e.type === 'task' && (e.status === 'done' || e.status === 'cancelled')) {
+      acts.push(`<button onclick="doReopen('${e.id}')">還原</button>`);
+    }
+    acts.push(`<button onclick="doEdit('${e.id}')">✎</button>`);
+    acts.push(`<button onclick="doDelete('${e.id}')" title="從筆記本永久移除">🗑</button>`);
+    const locTag = opts.showLoc ? `<span class="eloc">${esc(locLabel(e.loc))}</span>` : '';
+    const symClick = (e.type === 'task' && e.status === 'open') ? `onclick="doComplete('${e.id}')"` : '';
+    return `<li>
+      <span class="sym ${s.cls}" title="${s.tip}" ${symClick}>${s.ch}</span>
+      <span class="etext ${tcls}" id="etext-${e.id}">${esc(e.text)}</span>
+      ${locTag}
+      <span class="eacts">${acts.join('')}</span>
+    </li>`;
+  }).join('') + `</ul>`;
+}
+
+/* ---------- 項目動作 ---------- */
+function doComplete(id) { const e = findEntry(id); if (e) { e.status = 'done'; save(); render(); } }
+function doReopen(id)   { const e = findEntry(id); if (e) { e.status = 'open'; save(); render(); } }
+function doCancel(id)   { const e = findEntry(id); if (e) { e.status = 'cancelled'; save(); render(); toast('已捨棄（刪除線）'); } }
+function doDelete(id) {
+  if (!confirm('確定要永久刪除這一筆紀錄嗎？')) return;
+  state.entries = state.entries.filter(e => e.id !== id);
+  save(); render();
+}
+function doEdit(id) {
+  const e = findEntry(id);
+  if (!e) return;
+  const nt = prompt('編輯內容：', e.text);
+  if (nt !== null && nt.trim()) { e.text = nt.trim(); save(); render(); }
+}
+function doMigrateTomorrow(id) {
+  const e = findEntry(id);
+  const base = (e.loc.view === 'daily') ? e.loc.date : todayStr();
+  migrateEntry(id, { view: 'daily', date: addDays(base, 1) }, 'migrated');
+}
+function doMigrateNextMonth(id) {
+  migrateEntry(id, { view: 'monthly', month: addMonths(thisMonth(), 1) }, 'migrated');
+}
+function openSchedule(id) {
+  scheduleTargetId = id;
+  const sel = document.getElementById('scheduleMonth');
+  sel.innerHTML = '';
+  for (let i = 1; i <= 12; i++) {
+    const m = addMonths(thisMonth(), i);
+    sel.innerHTML += `<option value="${m}">${fmtMonth(m)}</option>`;
+  }
+  document.getElementById('scheduleDlg').showModal();
+}
+function confirmSchedule() {
+  const m = document.getElementById('scheduleMonth').value;
+  document.getElementById('scheduleDlg').close();
+  if (scheduleTargetId) migrateEntry(scheduleTargetId, { view: 'future', month: m }, 'scheduled');
+  scheduleTargetId = null;
+}
+
+/* ---------- 快速新增列 ---------- */
+function quickAddHtml(fnName) {
+  return `<div class="quick-add">
+    <select id="qa-type">
+      <option value="task">• 任務</option>
+      <option value="event">○ 事件</option>
+      <option value="note">– 筆記</option>
+    </select>
+    <input type="text" id="qa-text" placeholder="快速紀錄…（Enter 新增）"
+      onkeydown="if(event.key==='Enter'){${fnName}()}">
+    <button class="btn primary" onclick="${fnName}()">新增</button>
+  </div>`;
+}
+function readQuickAdd() {
+  const type = document.getElementById('qa-type').value;
+  const input = document.getElementById('qa-text');
+  const text = input.value;
+  input.value = '';
+  return { type, text };
+}
+
+/* ---------- 各視圖 ---------- */
+function render() {
+  document.querySelectorAll('#nav button').forEach(b =>
+    b.classList.toggle('active', b.dataset.view === view));
+  if (view === 'daily') renderDaily();
+  else if (view === 'monthly') renderMonthly();
+  else if (view === 'future') renderFuture();
+  else if (view === 'habits') renderHabits();
+  else if (view === 'collections') renderCollections();
+  else if (view === 'stats') renderStats();
+  else if (view === 'index') renderIndex();
+  else if (view === 'migrate') renderMigrate();
+  const qa = document.getElementById('qa-text');
+  if (qa) qa.focus({ preventScroll: true });
+}
+
+/* 日誌 */
+function renderDaily() {
+  const entries = entriesAt({ view: 'daily', date: curDate });
+  $main.innerHTML = `
+  <div class="card">
+    <h2>
+      <span class="navbar-date">
+        <button class="btn small" onclick="curDate=addDays(curDate,-1);render()">←</button>
+        <input type="date" value="${curDate}" onchange="curDate=this.value;render()">
+        <button class="btn small" onclick="curDate=addDays(curDate,1);render()">→</button>
+        <button class="btn small" onclick="curDate=todayStr();render()">今天</button>
+      </span>
+      <span class="hint">${fmtDate(curDate)}</span>
+    </h2>
+    ${renderEntryList(entries, { emptyMsg: '今天還沒有任何紀錄。想到什麼就寫下來吧！' })}
+    ${quickAddHtml('qaDaily')}
+    <div class="legend">
+      <span><b>•</b>任務</span><span><b>✕</b>完成</span><span><b>&gt;</b>轉移</span>
+      <span><b>&lt;</b>排程</span><span><b>○</b>事件</span><span><b>–</b>筆記</span>
+      <span style="margin-left:auto">滑鼠移到項目上可操作：完成／轉移／排程／捨棄</span>
+    </div>
+  </div>`;
+}
+function qaDaily() {
+  const { type, text } = readQuickAdd();
+  if (addEntry(type, text, { view: 'daily', date: curDate })) render();
+}
+
+/* 月誌 */
+function renderMonthly() {
+  const monthTasks = entriesAt({ view: 'monthly', month: curMonth });
+  const nDays = daysInMonth(curMonth);
+  const today = todayStr();
+  let calRows = '';
+  for (let d = 1; d <= nDays; d++) {
+    const ds = `${curMonth}-${pad(d)}`;
+    const dents = entriesAt({ view: 'daily', date: ds });
+    calRows += `<div class="mo-day ${ds === today ? 'today' : ''}">
+      <span class="dnum" title="開啟這一天的日誌" onclick="curDate='${ds}';view='daily';render()">${pad(d)} ${weekdayOf(ds)}</span>
+      <span class="dents">${dents.map(e => {
+        const s = symbolOf(e);
+        const tcls = e.status && e.status !== 'open' ? e.status : '';
+        return `<span class="dent"><span class="sym ${s.cls}">${s.ch}</span><span class="etext ${tcls}">${esc(e.text)}</span></span>`;
+      }).join('')}</span>
+    </div>`;
+  }
+  const futureHere = entriesAt({ view: 'future', month: curMonth })
+    .filter(e => e.type !== 'task' || e.status === 'open');
+  const futureBlock = futureHere.length ? `
+    <div class="card">
+      <h2>來自未來誌的項目 <span class="hint">建立本月月誌時，把它們移入</span></h2>
+      <ul class="entries">${futureHere.map(e => {
+        const s = symbolOf(e);
+        return `<li><span class="sym ${s.cls}">${s.ch}</span>
+          <span class="etext">${esc(e.text)}</span>
+          <span class="eacts" style="opacity:1"><button onclick="pullFromFuture('${e.id}')">移入本月 →</button></span></li>`;
+      }).join('')}</ul>
+    </div>` : '';
+  $main.innerHTML = `
+  <div class="card">
+    <h2>
+      <span class="navbar-date">
+        <button class="btn small" onclick="curMonth=addMonths(curMonth,-1);render()">←</button>
+        <input type="month" value="${curMonth}" onchange="curMonth=this.value;render()">
+        <button class="btn small" onclick="curMonth=addMonths(curMonth,1);render()">→</button>
+        <button class="btn small" onclick="curMonth=thisMonth();render()">本月</button>
+      </span>
+      <span class="hint">${fmtMonth(curMonth)}</span>
+    </h2>
+    <div class="two-col">
+      <div>
+        <h2 style="font-size:.92rem">📅 本月日曆<span class="hint">點日期可進入日誌</span></h2>
+        <div style="max-height:520px;overflow-y:auto">${calRows}</div>
+      </div>
+      <div>
+        <h2 style="font-size:.92rem">☑ 本月任務清單<span class="hint">這個月必須完成的事</span></h2>
+        ${renderEntryList(monthTasks, { emptyMsg: '尚無本月任務。' })}
+        ${quickAddHtml('qaMonthly')}
+      </div>
+    </div>
+  </div>
+  ${futureBlock}`;
+}
+function qaMonthly() {
+  const { type, text } = readQuickAdd();
+  if (addEntry(type, text, { view: 'monthly', month: curMonth })) render();
+}
+function pullFromFuture(id) {
+  const e = findEntry(id);
+  if (!e) return;
+  if (e.type === 'task') {
+    migrateEntry(id, { view: 'monthly', month: e.loc.month }, 'migrated');
+  } else {
+    e.loc = { view: 'monthly', month: e.loc.month };
+    save(); render();
+  }
+  toast('已移入本月月誌');
+}
+
+/* 未來誌 */
+function renderFuture() {
+  let blocks = '';
+  for (let i = 0; i <= 11; i++) {
+    const m = addMonths(thisMonth(), i);
+    const ents = entriesAt({ view: 'future', month: m });
+    blocks += `<div class="card" style="margin-bottom:0">
+      <h2>${fmtMonth(m)}${i === 0 ? '<span class="hint">（本月）</span>' : ''}</h2>
+      ${renderEntryList(ents, { emptyMsg: '—' })}
+      <div class="quick-add">
+        <input type="text" placeholder="新增到 ${fmtMonth(m)}…"
+          onkeydown="if(event.key==='Enter'){qaFuture(this,'${m}')}">
+        <button class="btn small" onclick="qaFuture(this.previousElementSibling,'${m}')">＋</button>
+      </div>
+    </div>`;
+  }
+  $main.innerHTML = `
+  <div class="card" style="background:var(--accent-soft);border:none">
+    <b>未來誌（Future Log）</b>：存放「本月以外」的長期計畫、目標與事件。
+    到了該月份時，月誌會提醒你把項目移入。
+  </div>
+  <div class="future-grid">${blocks}</div>`;
+}
+function qaFuture(input, month) {
+  const text = input.value;
+  input.value = '';
+  if (addEntry('task', text, { view: 'future', month })) render();
+}
+
+/* 群組 */
+function renderCollections() {
+  if (curCollection) { renderCollectionDetail(); return; }
+  const rows = state.collections.map(c => {
+    const cnt = `${entriesAt({ view: 'collection', id: c.id }).length} 筆`;
+    return `<li>
+      <a onclick="curCollection='${c.id}';render()">📄 ${esc(c.name)}</a>
+      <span class="cnt">${cnt}</span>
+      <span style="margin-left:auto"><button class="btn small" onclick="deleteCollection('${c.id}')">刪除</button></span>
+    </li>`;
+  }).join('');
+  $main.innerHTML = `
+  <div class="card">
+    <h2>客製化群組 <span class="hint">專案清單、興趣、長期追蹤的主題（習慣打卡請用「習慣追蹤」分頁）</span></h2>
+    ${state.collections.length ? `<ul class="index-list">${rows}</ul>` : `<div class="empty">尚未建立任何群組。例如：旅行規劃、搬家清單、年度書單…</div>`}
+    <div class="quick-add">
+      <input type="text" id="col-name" placeholder="群組名稱…（Enter 建立）"
+        onkeydown="if(event.key==='Enter'){createCollection()}">
+      <button class="btn primary" onclick="createCollection()">建立群組</button>
+    </div>
+  </div>`;
+}
+function createCollection() {
+  const name = document.getElementById('col-name').value.trim();
+  if (!name) return;
+  const c = { id: uid(), name, kind: 'list' };
+  state.collections.push(c);
+  save();
+  curCollection = c.id;
+  render();
+  toast('群組已建立，別忘了它也會自動登記到「索引」！');
+}
+function deleteCollection(id) {
+  const c = state.collections.find(c => c.id === id);
+  if (!confirm(`確定刪除群組「${c.name}」及其所有內容？`)) return;
+  state.collections = state.collections.filter(c => c.id !== id);
+  state.entries = state.entries.filter(e => !(e.loc.view === 'collection' && e.loc.id === id));
+  save(); render();
+}
+function renderCollectionDetail() {
+  const c = state.collections.find(c => c.id === curCollection);
+  if (!c) { curCollection = null; renderCollections(); return; }
+  const ents = entriesAt({ view: 'collection', id: c.id });
+  const body = renderEntryList(ents, { emptyMsg: '清單是空的。' }) + quickAddHtml('qaCollection');
+  $main.innerHTML = `
+  <div class="card">
+    <h2>
+      <button class="btn small" onclick="curCollection=null;render()">← 返回</button>
+      📄 ${esc(c.name)}
+    </h2>
+    ${body}
+  </div>`;
+}
+function qaCollection() {
+  const { type, text } = readQuickAdd();
+  if (addEntry(type, text, { view: 'collection', id: curCollection })) render();
+}
+/* ---------- SVG 圖表 ---------- */
+function chartWrap(title, inner) {
+  return `<div style="margin-top:20px"><h2 style="font-size:.92rem;margin-bottom:8px">${title}</h2>${inner}</div>`;
+}
+/* 折線圖：labels 對應 vals（null 表示該點無資料，線段會斷開） */
+function svgLine(labels, vals, opts = {}) {
+  const nums = vals.filter(v => v != null);
+  if (!nums.length) return `<div class="empty">尚無數值資料</div>`;
+  const W = 720, H = 200, padL = 46, padR = 12, padT = 14, padB = 26;
+  const color = opts.color || '#b3541e';
+  let min = Math.min(...nums), max = Math.max(...nums);
+  if (min === max) { min -= 1; max += 1; }
+  const span = max - min;
+  min -= span * 0.1; max += span * 0.1;
+  const x = i => padL + (W - padL - padR) * (labels.length === 1 ? 0.5 : i / (labels.length - 1));
+  const y = v => padT + (H - padT - padB) * (1 - (v - min) / (max - min));
+  let grid = '';
+  for (let t = 0; t <= 4; t++) {
+    const v = min + (max - min) * t / 4, yy = y(v);
+    grid += `<line x1="${padL}" x2="${W - padR}" y1="${yy}" y2="${yy}" stroke="#eee5d6"/>
+      <text x="${padL - 6}" y="${yy + 4}" text-anchor="end" font-size="10" fill="#6b6357">${fmtNum(v)}</text>`;
+  }
+  const stepL = Math.ceil(labels.length / 16);
+  let xlab = '';
+  labels.forEach((l, i) => {
+    if (i % stepL === 0 || i === labels.length - 1)
+      xlab += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle" font-size="10" fill="#6b6357">${l}</text>`;
+  });
+  let d = '', prev = false, dots = '';
+  vals.forEach((v, i) => {
+    if (v == null) { prev = false; return; }
+    d += (prev ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1) + ' ';
+    prev = true;
+    dots += `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="3.2" fill="${color}">
+      <title>${labels[i]}：${v}${opts.unit ? ' ' + opts.unit : ''}</title></circle>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;background:#fffdf9;border:1px solid var(--line);border-radius:8px">
+    ${grid}${xlab}<path d="${d}" fill="none" stroke="${color}" stroke-width="2"/>${dots}</svg>`;
+}
+/* 堆疊長條圖：series = [{name, color, values}] */
+function svgBars(labels, series) {
+  const W = 720, H = 210, padL = 38, padR = 10, padT = 12, padB = 26;
+  const sums = labels.map((_, i) => series.reduce((a, s) => a + (Number(s.values[i]) || 0), 0));
+  let max = Math.max(...sums, 1);
+  const step = Math.max(1, Math.ceil(max / 4));
+  max = step * Math.ceil(max / step);
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const y = v => padT + innerH * (1 - v / max);
+  const slot = innerW / labels.length;
+  const bw = Math.min(26, slot * 0.7);
+  let grid = '';
+  for (let v = 0; v <= max; v += step) {
+    grid += `<line x1="${padL}" x2="${W - padR}" y1="${y(v)}" y2="${y(v)}" stroke="#eee5d6"/>
+      <text x="${padL - 5}" y="${y(v) + 4}" text-anchor="end" font-size="10" fill="#6b6357">${v}</text>`;
+  }
+  let bars = '';
+  labels.forEach((l, i) => {
+    let acc = 0;
+    const bx = padL + slot * i + (slot - bw) / 2;
+    series.forEach(s => {
+      const v = Number(s.values[i]) || 0;
+      if (!v) return;
+      const y1 = y(acc + v), h = y(acc) - y1;
+      bars += `<rect x="${bx.toFixed(1)}" y="${y1.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" fill="${s.color}" rx="1">
+        <title>${l}　${s.name}：${v}</title></rect>`;
+      acc += v;
+    });
+  });
+  const stepL = Math.ceil(labels.length / 16);
+  let xlab = '';
+  labels.forEach((l, i) => {
+    if (i % stepL === 0 || i === labels.length - 1)
+      xlab += `<text x="${(padL + slot * i + slot / 2).toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="10" fill="#6b6357">${l}</text>`;
+  });
+  const legend = series.length > 1 ? `<div class="legend" style="margin:0 0 6px">${series.map(s =>
+    `<span><i style="display:inline-block;width:10px;height:10px;background:${s.color};border-radius:2px;margin-right:4px"></i>${s.name}</span>`).join('')}</div>` : '';
+  return legend + `<svg viewBox="0 0 ${W} ${H}" style="width:100%;background:#fffdf9;border:1px solid var(--line);border-radius:8px">${grid}${bars}${xlab}</svg>`;
+}
+
+/* ---------- 習慣追蹤 ---------- */
+function fmtNum(n) { return Math.round(n * 100) / 100; }
+function monthNavHtml() {
+  return `<div class="navbar-date" style="margin-bottom:12px">
+    <button class="btn small" onclick="curMonth=addMonths(curMonth,-1);render()">←</button>
+    <input type="month" value="${curMonth}" onchange="curMonth=this.value;render()">
+    <button class="btn small" onclick="curMonth=addMonths(curMonth,1);render()">→</button>
+    <button class="btn small" onclick="curMonth=thisMonth();render()">本月</button>
+  </div>`;
+}
+function yearNavHtml() {
+  return `<div class="navbar-date" style="margin-bottom:12px">
+    <button class="btn small" onclick="curYear--;render()">←</button>
+    <b style="font-size:1rem">${curYear} 年</b>
+    <button class="btn small" onclick="curYear++;render()">→</button>
+  </div>`;
+}
+function habitLogsOfMonth(h, monthStr) {
+  const vals = [];
+  const nDays = daysInMonth(monthStr);
+  for (let d = 1; d <= nDays; d++) {
+    const v = state.habitLogs[`${h.id}|${monthStr}-${pad(d)}`];
+    if (v !== undefined && v !== false) vals.push(v);
+  }
+  return vals;
+}
+function renderHabits() {
+  const seg = `<span class="seg">
+    <button class="${habitMode === 'month' ? 'active' : ''}" onclick="habitMode='month';render()">月追蹤表</button>
+    <button class="${habitMode === 'year' ? 'active' : ''}" onclick="habitMode='year';render()">年統計</button>
+  </span>`;
+  const addForm = `<div class="quick-add" style="margin-top:16px">
+    <select id="hb-kind">
+      <option value="check">✓ 打勾習慣</option>
+      <option value="number">🔢 數值追蹤</option>
+    </select>
+    <input type="text" id="hb-name" placeholder="名稱…（例：喝水 2000ml、體重、閱讀分鐘）"
+      onkeydown="if(event.key==='Enter'){addHabitDef()}">
+    <input type="text" id="hb-unit" placeholder="單位（選填）" style="flex:0 0 120px">
+    <button class="btn primary" onclick="addHabitDef()">新增項目</button>
+  </div>`;
+  $main.innerHTML = `<div class="card">
+    <h2>🔲 習慣追蹤 ${seg}
+      <span class="hint">${habitMode === 'month' ? '欄＝日期、列＝項目；點格子打卡（✓）或輸入數值' : '欄＝月份、列＝項目；表格下方附圖表'}</span></h2>
+    ${habitMode === 'month' ? habitMonthTable() : habitYearTable()}
+    ${addForm}
+  </div>`;
+}
+function habitNameTh(h) {
+  return `<th class="hname">${esc(h.name)}${h.unit ? `<span style="font-weight:normal;font-size:.72rem">（${esc(h.unit)}）</span>` : ''}
+    <button class="btn small" style="border:none;padding:0 3px" title="刪除此項目及所有紀錄"
+      onclick="removeHabitDef('${h.id}')">×</button></th>`;
+}
+function habitMonthTable() {
+  if (!state.habits.length)
+    return monthNavHtml() + `<div class="empty">還沒有追蹤項目。用下方欄位新增：「打勾習慣」如運動、早睡；「數值追蹤」如體重、開銷、閱讀分鐘。</div>`;
+  const nDays = daysInMonth(curMonth), today = todayStr();
+  let head = `<tr><th class="corner">項目＼日期</th>`;
+  for (let d = 1; d <= nDays; d++) {
+    const ds = `${curMonth}-${pad(d)}`;
+    head += `<th class="${ds === today ? 'todaycol' : ''}" title="${ds}（週${weekdayOf(ds)}）">${d}<br>
+      <span style="font-weight:normal;font-size:.68rem">${weekdayOf(ds)}</span></th>`;
+  }
+  head += `<th>合計／<br>達成</th><th>平均／<br>達成率</th></tr>`;
+  const rows = state.habits.map(h => {
+    let cells = '';
+    for (let d = 1; d <= nDays; d++) {
+      const ds = `${curMonth}-${pad(d)}`;
+      const v = state.habitLogs[`${h.id}|${ds}`];
+      const tc = ds === today ? ' todaycol' : '';
+      if (h.kind === 'check')
+        cells += `<td class="hcell${v ? ' on' : ''}${tc}" onclick="toggleCheck('${h.id}','${ds}')">${v ? '✓' : ''}</td>`;
+      else
+        cells += `<td class="hcell${v !== undefined ? ' on' : ''}${tc}" onclick="enterValue('${h.id}','${ds}')">${v !== undefined ? v : ''}</td>`;
+    }
+    const vals = habitLogsOfMonth(h, curMonth);
+    let sum, avg;
+    if (h.kind === 'check') {
+      sum = `${vals.length} 天`;
+      avg = `${Math.round(vals.length / nDays * 100)}%`;
+    } else {
+      const total = vals.reduce((a, b) => a + Number(b), 0);
+      sum = vals.length ? fmtNum(total) : '—';
+      avg = vals.length ? fmtNum(total / vals.length) : '—';
+    }
+    return `<tr>${habitNameTh(h)}${cells}<td class="sumcol">${sum}</td><td class="sumcol">${avg}</td></tr>`;
+  }).join('');
+  // 數值追蹤：數值 vs 日期 折線圖
+  const charts = state.habits.filter(h => h.kind === 'number').map(h => {
+    const labels = [], vals = [];
+    for (let d = 1; d <= nDays; d++) {
+      labels.push(String(d));
+      const v = state.habitLogs[`${h.id}|${curMonth}-${pad(d)}`];
+      vals.push(v !== undefined ? Number(v) : null);
+    }
+    return chartWrap(`📈 ${esc(h.name)}${h.unit ? `（${esc(h.unit)}）` : ''} — ${fmtMonth(curMonth)} 每日數值`,
+      svgLine(labels, vals, { unit: esc(h.unit || '') }));
+  }).join('');
+  return monthNavHtml() + `<table class="hgrid"><thead>${head}</thead><tbody>${rows}</tbody></table>` + charts;
+}
+function habitYearTable() {
+  if (!state.habits.length) return yearNavHtml() + `<div class="empty">還沒有追蹤項目。</div>`;
+  let head = `<tr><th class="corner">項目＼月份</th>`;
+  for (let m = 1; m <= 12; m++) head += `<th>${m} 月</th>`;
+  head += `<th>全年</th></tr>`;
+  const rows = state.habits.map(h => {
+    let cells = '', cnt = 0, sum = 0;
+    for (let m = 1; m <= 12; m++) {
+      const vals = habitLogsOfMonth(h, `${curYear}-${pad(m)}`);
+      if (!vals.length) { cells += '<td>—</td>'; continue; }
+      cnt += vals.length;
+      if (h.kind === 'check') {
+        cells += `<td>${vals.length} 天</td>`;
+      } else {
+        const t = vals.reduce((a, b) => a + Number(b), 0);
+        sum += t;
+        cells += `<td>${fmtNum(t)}（${fmtNum(t / vals.length)}）</td>`;
+      }
+    }
+    const tot = !cnt ? '—' : (h.kind === 'check' ? `${cnt} 天` : `${fmtNum(sum)}（${fmtNum(sum / cnt)}）`);
+    return `<tr>${habitNameTh(h)}${cells}<td class="sumcol">${tot}</td></tr>`;
+  }).join('');
+  const note = `<p style="font-size:.78rem;color:var(--ink-soft);margin-top:6px">數值追蹤顯示格式：合計（平均）</p>`;
+  // 圖表：打勾習慣 → 每月達成天數長條圖；數值追蹤 → 每月合計/平均折線圖
+  const hasNumber = state.habits.some(h => h.kind === 'number');
+  const metricSeg = hasNumber ? `<div style="margin-top:16px"><span class="seg">
+      <button class="${habitYearMetric === 'sum' ? 'active' : ''}" onclick="habitYearMetric='sum';render()">數值圖：合計</button>
+      <button class="${habitYearMetric === 'avg' ? 'active' : ''}" onclick="habitYearMetric='avg';render()">數值圖：平均</button>
+    </span></div>` : '';
+  const labels = [];
+  for (let m = 1; m <= 12; m++) labels.push(`${m}月`);
+  const charts = state.habits.map(h => {
+    const vals = [];
+    for (let m = 1; m <= 12; m++) {
+      const vs = habitLogsOfMonth(h, `${curYear}-${pad(m)}`);
+      if (h.kind === 'check') vals.push(vs.length);
+      else if (!vs.length) vals.push(null);
+      else {
+        const t = vs.reduce((a, b) => a + Number(b), 0);
+        vals.push(fmtNum(habitYearMetric === 'avg' ? t / vs.length : t));
+      }
+    }
+    if (h.kind === 'check')
+      return chartWrap(`📊 ${esc(h.name)} — ${curYear} 年每月達成天數`,
+        svgBars(labels, [{ name: '達成天數', color: '#8a9a5b', values: vals }]));
+    return chartWrap(`📈 ${esc(h.name)}${h.unit ? `（${esc(h.unit)}）` : ''} — ${curYear} 年每月${habitYearMetric === 'avg' ? '平均' : '合計'}`,
+      svgLine(labels, vals, { unit: esc(h.unit || '') }));
+  }).join('');
+  return yearNavHtml() + `<table class="hgrid"><thead>${head}</thead><tbody>${rows}</tbody></table>` + note + metricSeg + charts;
+}
+function addHabitDef() {
+  const name = document.getElementById('hb-name').value.trim();
+  const kind = document.getElementById('hb-kind').value;
+  const unit = document.getElementById('hb-unit').value.trim();
+  if (!name) return;
+  state.habits.push({ id: uid(), name, kind, unit });
+  save(); render();
+  toast(`已新增「${name}」`);
+}
+function removeHabitDef(id) {
+  const h = state.habits.find(h => h.id === id);
+  if (!h || !confirm(`刪除「${h.name}」及其所有追蹤紀錄？`)) return;
+  state.habits = state.habits.filter(x => x.id !== id);
+  Object.keys(state.habitLogs).forEach(k => { if (k.startsWith(id + '|')) delete state.habitLogs[k]; });
+  save(); render();
+}
+function toggleCheck(id, ds) {
+  const k = `${id}|${ds}`;
+  if (state.habitLogs[k]) delete state.habitLogs[k]; else state.habitLogs[k] = true;
+  save(); render();
+}
+function enterValue(id, ds) {
+  const h = state.habits.find(h => h.id === id);
+  if (!h) return;
+  const k = `${id}|${ds}`;
+  const cur = state.habitLogs[k];
+  const raw = prompt(`輸入「${h.name}」 ${ds} 的數值${h.unit ? `（${h.unit}）` : ''}，留空可清除：`,
+    cur !== undefined ? cur : '');
+  if (raw === null) return;
+  const t = raw.trim();
+  if (t === '') {
+    delete state.habitLogs[k];
+  } else {
+    const n = Number(t);
+    if (isNaN(n)) { alert('請輸入數字'); return; }
+    state.habitLogs[k] = n;
+  }
+  save(); render();
+}
+
+/* ---------- 統計 ---------- */
+function entriesForMonth(m) {
+  return state.entries.filter(e =>
+    (e.loc.view === 'daily' && e.loc.date.startsWith(m)) ||
+    (e.loc.view === 'monthly' && e.loc.month === m));
+}
+function tally(list) {
+  const t = { task: 0, done: 0, open: 0, migrated: 0, scheduled: 0, cancelled: 0, event: 0, note: 0, total: list.length };
+  list.forEach(e => {
+    if (e.type === 'event') t.event++;
+    else if (e.type === 'note') t.note++;
+    else { t.task++; t[e.status]++; }
+  });
+  const denom = t.task - t.cancelled;
+  t.rate = denom > 0 ? Math.round(t.done / denom * 100) + '%' : '—';
+  return t;
+}
+function renderStats() {
+  const seg = `<span class="seg">
+    <button class="${statsMode === 'month' ? 'active' : ''}" onclick="statsMode='month';render()">月統計</button>
+    <button class="${statsMode === 'year' ? 'active' : ''}" onclick="statsMode='year';render()">年統計</button>
+  </span>`;
+  $main.innerHTML = `<div class="card">
+    <h2>📊 紀錄統計 ${seg}<span class="hint">統計範圍：日誌＋月誌（未來誌與群組不計入）</span></h2>
+    ${statsMode === 'month' ? statsMonth() : statsYear()}
+  </div>`;
+}
+const STAT_SERIES = [
+  { key: 'done', name: '完成任務', color: '#8a9a5b' },
+  { key: 'other', name: '其他任務', color: '#6b6357' },
+  { key: 'event', name: '事件', color: '#b3541e' },
+  { key: 'note', name: '筆記', color: '#c9bfae' },
+];
+function statsMonth() {
+  const t = tally(entriesForMonth(curMonth));
+  const cards = [
+    ['• 任務總數', t.task], ['✕ 已完成', t.done], ['• 未完成', t.open],
+    ['&gt; 已轉移', t.migrated], ['&lt; 已排程', t.scheduled], ['～ 已捨棄', t.cancelled],
+    ['完成率', t.rate], ['○ 事件', t.event], ['– 筆記', t.note],
+  ].map(([l, v]) => `<div class="stat-card"><div class="num">${v}</div><div class="lbl">${l}</div></div>`).join('');
+  // 每日紀錄量堆疊長條圖（依日誌日期）
+  const nDays = daysInMonth(curMonth);
+  const labels = [];
+  const data = { done: [], other: [], event: [], note: [] };
+  for (let d = 1; d <= nDays; d++) {
+    const ds = `${curMonth}-${pad(d)}`;
+    labels.push(String(d));
+    const dl = state.entries.filter(e => e.loc.view === 'daily' && e.loc.date === ds);
+    data.done.push(dl.filter(e => e.type === 'task' && e.status === 'done').length);
+    data.other.push(dl.filter(e => e.type === 'task' && e.status !== 'done').length);
+    data.event.push(dl.filter(e => e.type === 'event').length);
+    data.note.push(dl.filter(e => e.type === 'note').length);
+  }
+  const hasDaily = Object.values(data).some(a => a.some(v => v > 0));
+  const chart = hasDaily
+    ? chartWrap(`📊 每日紀錄量 — ${fmtMonth(curMonth)}（依日誌）`,
+        svgBars(labels, STAT_SERIES.map(s => ({ name: s.name, color: s.color, values: data[s.key] }))))
+    : '';
+  return monthNavHtml() +
+    (t.total ? '' : `<div class="empty" style="margin-bottom:10px">${fmtMonth(curMonth)} 沒有任何紀錄。</div>`) +
+    `<div class="stat-cards">${cards}</div>
+     <p style="font-size:.78rem;color:var(--ink-soft);margin-top:10px">完成率 ＝ 已完成 ÷（任務總數 － 已捨棄）</p>` + chart;
+}
+function statsYear() {
+  const yt = { task: 0, done: 0, open: 0, migrated: 0, scheduled: 0, cancelled: 0, event: 0, note: 0 };
+  const labels = [];
+  const data = { done: [], other: [], event: [], note: [] };
+  let rows = '';
+  for (let m = 1; m <= 12; m++) {
+    const ms = `${curYear}-${pad(m)}`;
+    const t = tally(entriesForMonth(ms));
+    Object.keys(yt).forEach(k => yt[k] += t[k]);
+    labels.push(`${m}月`);
+    data.done.push(t.done);
+    data.other.push(t.task - t.done);
+    data.event.push(t.event);
+    data.note.push(t.note);
+    rows += `<tr><td class="l">${m} 月</td><td>${t.task}</td><td>${t.done}</td><td>${t.open}</td>
+      <td>${t.migrated + t.scheduled}</td><td>${t.cancelled}</td><td>${t.rate}</td><td>${t.event}</td><td>${t.note}</td></tr>`;
+  }
+  const denom = yt.task - yt.cancelled;
+  const yrate = denom > 0 ? Math.round(yt.done / denom * 100) + '%' : '—';
+  const hasAny = Object.values(data).some(a => a.some(v => v > 0));
+  const chart = hasAny
+    ? chartWrap(`📊 每月紀錄量 — ${curYear} 年`,
+        svgBars(labels, STAT_SERIES.map(s => ({ name: s.name, color: s.color, values: data[s.key] }))))
+    : '';
+  return yearNavHtml() + `<div style="overflow-x:auto"><table class="stat-table">
+    <tr><th>月份</th><th>任務</th><th>完成</th><th>未完成</th><th>轉移/排程</th><th>捨棄</th><th>完成率</th><th>事件</th><th>筆記</th></tr>
+    ${rows}
+    <tr class="total"><td class="l">全年合計</td><td>${yt.task}</td><td>${yt.done}</td><td>${yt.open}</td>
+      <td>${yt.migrated + yt.scheduled}</td><td>${yt.cancelled}</td><td>${yrate}</td><td>${yt.event}</td><td>${yt.note}</td></tr>
+  </table></div>` + chart;
+}
+
+/* 索引 */
+function renderIndex() {
+  const months = {};
+  state.entries.forEach(e => {
+    let m = null;
+    if (e.loc.view === 'daily') m = e.loc.date.slice(0, 7);
+    if (e.loc.view === 'monthly') m = e.loc.month;
+    if (m) months[m] = (months[m] || 0) + 1;
+  });
+  const monthRows = Object.keys(months).sort().reverse().map(m =>
+    `<li><a onclick="curMonth='${m}';view='monthly';render()">📅 ${fmtMonth(m)}</a>
+     <span class="cnt">${months[m]} 筆紀錄</span></li>`).join('');
+  const futureCnt = state.entries.filter(e => e.loc.view === 'future').length;
+  const colRows = state.collections.map(c =>
+    `<li><a onclick="curCollection='${c.id}';view='collections';render()">📄 ${esc(c.name)}</a></li>`).join('');
+  $main.innerHTML = `
+  <div class="card" style="background:var(--accent-soft);border:none">
+    <b>索引（Index）</b>：筆記本的專屬目錄。紙本需要手動登記頁碼，這裡替你自動整理好了——點擊即可跳轉。
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <h2>📖 月份紀錄</h2>
+      ${monthRows ? `<ul class="index-list">${monthRows}</ul>` : '<div class="empty">尚無紀錄</div>'}
+      <ul class="index-list"><li><a onclick="view='future';render()">🔭 未來誌</a><span class="cnt">${futureCnt} 筆</span></li></ul>
+    </div>
+    <div class="card">
+      <h2>🗂 群組與追蹤</h2>
+      ${colRows ? `<ul class="index-list">${colRows}</ul>` : '<div class="empty">尚無群組</div>'}
+      <ul class="index-list">
+        <li><a onclick="view='habits';render()">🔲 習慣追蹤</a><span class="cnt">${state.habits.length} 個項目</span></li>
+        <li><a onclick="view='stats';render()">📊 紀錄統計</a></li>
+      </ul>
+    </div>
+  </div>`;
+}
+
+/* 月末轉移 */
+function migrationCandidates() {
+  const today = todayStr(), month = thisMonth();
+  return state.entries.filter(e =>
+    e.type === 'task' && e.status === 'open' && (
+      (e.loc.view === 'daily' && e.loc.date < today) ||
+      (e.loc.view === 'monthly' && e.loc.month <= month) ||
+      (e.loc.view === 'future' && e.loc.month < month)
+    ));
+}
+function renderMigrate() {
+  const cands = migrationCandidates();
+  const cards = cands.map(e => `
+    <div class="mig-card">
+      <div class="qtext"><span class="sym task">•</span> ${esc(e.text)}</div>
+      <div class="qsrc">來源：${esc(locLabel(e.loc))}（建立於 ${e.created}）</div>
+      <div class="qbtns">
+        <button class="btn" onclick="doComplete('${e.id}')">✕ 其實做完了</button>
+        <button class="btn" onclick="doMigrateNextMonth('${e.id}')">&gt; 轉移到下月</button>
+        <button class="btn" onclick="openSchedule('${e.id}')">&lt; 排程到未來</button>
+        <button class="btn" onclick="doCancel('${e.id}')">～ 不重要，捨棄</button>
+      </div>
+    </div>`).join('');
+  $main.innerHTML = `
+  <div class="card">
+    <h2>🔄 月末轉移儀式（Migration）<span class="hint">子彈筆記最精華的篩選機制</span></h2>
+    <div class="soul">
+      面對每一個未完成的任務，先停下來問自己兩個問題：<br>
+      <b>1. 這個任務現在真的重要嗎？</b><br>
+      <b>2. 如果不做，會有什麼實質的負面影響嗎？</b><br>
+      若同一個任務已經連續轉移了好幾個月，請考慮：捨棄它，或把它拆解成更小的步驟。
+    </div>
+    ${cands.length
+      ? `<p style="font-size:.88rem;color:var(--ink-soft);margin-bottom:12px">找到 <b>${cands.length}</b> 個未完成的任務需要盤點：</p>${cards}`
+      : `<div class="empty">🎉 太棒了！目前沒有需要盤點的過期任務。</div>`}
+  </div>`;
+}
+
+/* ---------- 匯出／匯入 ---------- */
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `bullet_journal_backup_${todayStr()}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('已下載備份檔');
+}
+function importData(input) {
+  const f = input.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const data = JSON.parse(r.result);
+      if (!Array.isArray(data.entries) || !Array.isArray(data.collections)) throw new Error('格式不符');
+      if (!confirm('匯入將覆蓋目前所有筆記資料，確定繼續？')) return;
+      state = normalize(data);
+      save(); render();
+      toast('匯入完成');
+    } catch (err) { alert('匯入失敗：' + err.message); }
+  };
+  r.readAsText(f);
+  input.value = '';
+}
+
+render();
+initSync();
+</script>
+</body>
+</html>
