@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>子彈筆記 Bullet Journal</title>
+<title>VZO's 子彈筆記 Bullet Journal</title>
 <style>
   :root {
     --paper: #faf6ef;
@@ -71,7 +71,7 @@
 
   ul.entries { list-style: none; }
   ul.entries li {
-    display: flex; align-items: flex-start; gap: 10px;
+    display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap;
     padding: 7px 6px; border-bottom: 1px dashed var(--line);
   }
   ul.entries li:last-child { border-bottom: none; }
@@ -85,12 +85,12 @@
   .sym.migrated, .sym.scheduled { color: var(--ink-soft); }
   .sym.event { color: var(--accent); }
   .sym.note { color: var(--ink-soft); }
-  .etext { flex: 1; line-height: 1.5; word-break: break-word; }
+  .etext { flex: 1 1 160px; line-height: 1.5; word-break: break-word; }
   .etext.done, .etext.migrated, .etext.scheduled { color: var(--ink-soft); }
   .etext.cancelled { text-decoration: line-through; color: #b0a89f; }
   .etext input { width: 100%; }
   .eloc { font-size: .72rem; color: var(--ink-soft); background: var(--accent-soft); border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
-  .eacts { display: flex; gap: 4px; opacity: 0; transition: opacity .15s; flex-shrink: 0; }
+  .eacts { display: flex; gap: 4px; opacity: 0; transition: opacity .15s; flex-shrink: 0; margin-left: auto; flex-wrap: wrap; }
   ul.entries li:hover .eacts { opacity: 1; }
   .eacts button {
     background: none; border: 1px solid var(--line); border-radius: 4px; cursor: pointer;
@@ -153,6 +153,15 @@
   .index-list a:hover { text-decoration: underline; }
   .index-list .cnt { color: var(--ink-soft); font-size: .8rem; }
 
+  .selbox { width: 15px; height: 15px; margin-top: 4px; flex-shrink: 0; accent-color: var(--accent); cursor: pointer; }
+  .selph { width: 15px; flex-shrink: 0; }
+  .selbar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+    background: var(--paper-card); border-top: 2px solid var(--accent);
+    padding: 10px 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    box-shadow: 0 -2px 12px rgba(60,50,30,.15); font-size: .9rem;
+  }
+
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
     background: var(--ink); color: #fff; padding: 10px 20px; border-radius: 8px;
@@ -173,7 +182,7 @@
 
 <header>
   <div class="head-row">
-    <h1>✒ 子彈筆記<span class="sub">追蹤過去・整理現在・規劃未來</span></h1>
+    <h1>✒ VZO's 子彈筆記<span class="sub">追蹤過去・整理現在・規劃未來</span></h1>
     <div class="head-tools">
       <span id="syncPill" class="btn small" style="cursor:pointer;color:var(--ink-soft)" onclick="openSyncDlg()" title="雲端同步設定">☁ 未同步</span>
       <button class="btn small" onclick="exportData()">匯出備份</button>
@@ -196,6 +205,12 @@
 <main id="main"></main>
 <div class="toast" id="toast"></div>
 
+<div id="selbar" class="selbar" style="display:none">
+  <b>☑ 已勾選 <span id="selcnt">0</span> 個任務</b>
+  <button class="btn primary" onclick="selMigrate()">&gt; 一起轉移…</button>
+  <button class="btn" onclick="clearSel()">取消勾選</button>
+</div>
+
 <dialog id="scheduleDlg">
   <h3>排程到未來誌 &lt;</h3>
   <p style="font-size:.85rem;color:var(--ink-soft)">這個任務重要、但近期還不需要做。選擇它所屬的未來月份：</p>
@@ -203,6 +218,34 @@
   <div class="drow">
     <button class="btn" onclick="document.getElementById('scheduleDlg').close()">取消</button>
     <button class="btn primary" onclick="confirmSchedule()">排程</button>
+  </div>
+</dialog>
+
+<dialog id="migrateDlg" style="max-width:460px;width:calc(100vw - 40px)">
+  <h3>轉移任務 &gt;</h3>
+  <p id="mig-text" style="font-size:.88rem;background:var(--accent-soft);border-radius:6px;padding:8px 12px;word-break:break-word"></p>
+  <p style="font-size:.78rem;color:var(--ink-soft);margin-top:6px">原任務會標記為已轉移（&gt;）留在原地，並在目標位置建立一份新任務。</p>
+  <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
+    <label style="display:flex;align-items:center;gap:8px;font-size:.9rem;flex-wrap:wrap">
+      <input type="radio" name="migTarget" value="daily" checked>某一天的日誌
+      <span style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <button class="btn small" type="button" onclick="setMigDate(addDays(todayStr(),1))">明天</button>
+        <button class="btn small" type="button" onclick="setMigDate(nextMonday())">下週一</button>
+        <input type="date" id="mig-date" onfocus="pickMigTarget('daily')">
+      </span>
+    </label>
+    <label style="display:flex;align-items:center;gap:8px;font-size:.9rem;flex-wrap:wrap">
+      <input type="radio" name="migTarget" value="monthly">某個月的月誌
+      <input type="month" id="mig-month" onfocus="pickMigTarget('monthly')" style="margin-left:auto">
+    </label>
+    <label style="display:flex;align-items:center;gap:8px;font-size:.9rem;flex-wrap:wrap">
+      <input type="radio" name="migTarget" value="future">未來誌（長期計畫）
+      <select id="mig-future" onfocus="pickMigTarget('future')" style="margin-left:auto"></select>
+    </label>
+  </div>
+  <div class="drow">
+    <button class="btn" onclick="document.getElementById('migrateDlg').close()">取消</button>
+    <button class="btn primary" onclick="confirmMigrate()">轉移</button>
   </div>
 </dialog>
 
@@ -493,7 +536,7 @@ let habitYearMetric = 'sum'; // 年統計數值圖：sum | avg
 
 const $main = document.getElementById('main');
 document.querySelectorAll('#nav button').forEach(b => {
-  b.onclick = () => { view = b.dataset.view; render(); };
+  b.onclick = () => { view = b.dataset.view; selIds.clear(); render(); };
 });
 
 function toast(msg) {
@@ -517,9 +560,8 @@ function renderEntryList(entries, opts = {}) {
     if (e.type === 'task' && e.status === 'open') {
       acts.push(`<button onclick="doComplete('${e.id}')" title="完成">✕ 完成</button>`);
       if (e.loc.view === 'daily')
-        acts.push(`<button onclick="doMigrateTomorrow('${e.id}')" title="轉移到明天">&gt; 明天</button>`);
-      acts.push(`<button onclick="doMigrateNextMonth('${e.id}')" title="轉移到下個月月誌">&gt; 下月</button>`);
-      acts.push(`<button onclick="openSchedule('${e.id}')" title="排程到未來誌">&lt; 未來</button>`);
+        acts.push(`<button onclick="doMigrateTomorrow('${e.id}')" title="轉移到隔天">&gt; 明天</button>`);
+      acts.push(`<button onclick="openMigrateDlg('${e.id}')" title="轉移到指定日期的日誌、指定月份的月誌，或排程到未來誌">&gt; 轉移…</button>`);
       acts.push(`<button onclick="doCancel('${e.id}')" title="不再重要，畫刪除線捨棄">～ 捨棄</button>`);
     }
     if (e.type === 'task' && (e.status === 'done' || e.status === 'cancelled')) {
@@ -530,6 +572,7 @@ function renderEntryList(entries, opts = {}) {
     const locTag = opts.showLoc ? `<span class="eloc">${esc(locLabel(e.loc))}</span>` : '';
     const symClick = (e.type === 'task' && e.status === 'open') ? `onclick="doComplete('${e.id}')"` : '';
     return `<li>
+      ${selCellHtml(e)}
       <span class="sym ${s.cls}" title="${s.tip}" ${symClick}>${s.ch}</span>
       <span class="etext ${tcls}" id="etext-${e.id}">${esc(e.text)}</span>
       ${locTag}
@@ -578,6 +621,134 @@ function confirmSchedule() {
   scheduleTargetId = null;
 }
 
+/* ---------- 轉移到指定位置（日誌／月誌／未來誌），支援多筆 ---------- */
+let migrateDlgIds = [];
+function pickMigTarget(v) {
+  const r = document.querySelector(`input[name="migTarget"][value="${v}"]`);
+  if (r) r.checked = true;
+}
+function setMigDate(d) {
+  document.getElementById('mig-date').value = d;
+  pickMigTarget('daily');
+}
+function nextMonday() {
+  const [y, m, d] = todayStr().split('-').map(Number);
+  const dow = new Date(y, m - 1, d).getDay(); // 0=日 … 6=六
+  return addDays(todayStr(), ((8 - dow) % 7) || 7);
+}
+function openMigrateDlg(id) { openMigrateDlgFor([id]); }
+function openMigrateDlgFor(ids) {
+  ids = ids.filter(id => {
+    const e = findEntry(id);
+    return e && e.type === 'task' && e.status === 'open';
+  });
+  if (!ids.length) { toast('沒有可轉移的任務'); return; }
+  migrateDlgIds = ids;
+  let preview;
+  if (ids.length === 1) preview = '• ' + findEntry(ids[0]).text;
+  else {
+    const names = ids.map(i => findEntry(i).text).join('、');
+    preview = `共 ${ids.length} 個任務：` + (names.length > 60 ? names.slice(0, 60) + '…' : names);
+  }
+  document.getElementById('mig-text').textContent = preview;
+  const first = findEntry(ids[0]);
+  const baseDate = (ids.length === 1 && first.loc.view === 'daily') ? first.loc.date : todayStr();
+  let defDate = addDays(baseDate, 1);
+  if (defDate < todayStr()) defDate = todayStr(); // 過期任務不預設到過去的日期
+  document.getElementById('mig-date').value = defDate;
+  document.getElementById('mig-month').value =
+    (ids.length === 1 && first.loc.view === 'monthly') ? addMonths(first.loc.month, 1) : thisMonth();
+  const sel = document.getElementById('mig-future');
+  sel.innerHTML = '';
+  for (let i = 1; i <= 12; i++) {
+    const m = addMonths(thisMonth(), i);
+    sel.innerHTML += `<option value="${m}">${fmtMonth(m)}</option>`;
+  }
+  pickMigTarget('daily');
+  document.getElementById('migrateDlg').showModal();
+}
+function sameLoc(a, b) {
+  return a.view === b.view && a.date === b.date && a.month === b.month && a.id === b.id;
+}
+function confirmMigrate() {
+  const t = document.querySelector('input[name="migTarget"]:checked').value;
+  let loc, mark = 'migrated';
+  if (t === 'daily') {
+    const d = document.getElementById('mig-date').value;
+    if (!d) { alert('請先選擇要轉移到哪一天。'); return; }
+    loc = { view: 'daily', date: d };
+  } else if (t === 'monthly') {
+    const m = document.getElementById('mig-month').value;
+    if (!m) { alert('請先選擇要轉移到哪個月份。'); return; }
+    loc = { view: 'monthly', month: m };
+  } else {
+    loc = { view: 'future', month: document.getElementById('mig-future').value };
+    mark = 'scheduled';
+  }
+  let moved = 0, skipped = 0;
+  migrateDlgIds.forEach(id => {
+    const e = findEntry(id);
+    if (!e || e.status !== 'open' || sameLoc(loc, e.loc)) { skipped++; return; }
+    e.status = mark;
+    state.entries.push({ id: uid(), type: 'task', status: 'open', text: e.text, loc: { ...loc }, created: todayStr() });
+    moved++;
+  });
+  if (!moved) {
+    alert(migrateDlgIds.length === 1
+      ? '目標位置和任務目前的位置相同，請選別的位置。'
+      : '勾選的任務都已經在目標位置了。');
+    return;
+  }
+  document.getElementById('migrateDlg').close();
+  migrateDlgIds = [];
+  selIds.clear();
+  save(); render();
+  toast(`已轉移 ${moved} 個任務到 ${locLabel(loc)}` + (skipped ? `（${skipped} 個原本就在該位置，略過）` : ''));
+}
+
+/* ---------- 多選（批次轉移） ---------- */
+const selIds = new Set();
+function toggleSel(id, on) {
+  if (on) selIds.add(id); else selIds.delete(id);
+  updateSelBar();
+}
+function clearSel() {
+  selIds.clear();
+  document.querySelectorAll('.selbox').forEach(cb => cb.checked = false);
+  updateSelBar();
+}
+function selMigrate() { openMigrateDlgFor([...selIds]); }
+function updateSelBar() {
+  // 移除已不存在或已非開放狀態的任務
+  [...selIds].forEach(id => {
+    const e = findEntry(id);
+    if (!e || e.type !== 'task' || e.status !== 'open') selIds.delete(id);
+  });
+  const bar = document.getElementById('selbar');
+  bar.style.display = selIds.size ? 'flex' : 'none';
+  document.getElementById('selcnt').textContent = selIds.size;
+}
+function selCellHtml(e) {
+  if (e.type === 'task' && e.status === 'open')
+    return `<input type="checkbox" class="selbox" ${selIds.has(e.id) ? 'checked' : ''}
+      onclick="toggleSel('${e.id}',this.checked)" title="勾選後可在下方一次轉移多個任務">`;
+  return `<span class="selph"></span>`;
+}
+function doMigrateHere(id) {
+  migrateEntry(id, { view: 'daily', date: curDate }, 'migrated');
+}
+
+/* 這一天之前累積、還沒完成的任務（含過去的日誌／過期的月誌與未來誌） */
+function overdueTasks(dateStr) {
+  const month = dateStr.slice(0, 7);
+  const key = e => e.loc.view === 'daily' ? e.loc.date : e.loc.month + '-99';
+  return state.entries.filter(e =>
+    e.type === 'task' && e.status === 'open' && (
+      (e.loc.view === 'daily' && e.loc.date < dateStr) ||
+      ((e.loc.view === 'monthly' || e.loc.view === 'future') && e.loc.month < month)
+    )).sort((a, b) => key(a) < key(b) ? -1 : 1);
+}
+
 /* ---------- 快速新增列 ---------- */
 function quickAddHtml(fnName) {
   return `<div class="quick-add">
@@ -611,6 +782,7 @@ function render() {
   else if (view === 'stats') renderStats();
   else if (view === 'index') renderIndex();
   else if (view === 'migrate') renderMigrate();
+  updateSelBar();
   const qa = document.getElementById('qa-text');
   if (qa) qa.focus({ preventScroll: true });
 }
@@ -618,7 +790,8 @@ function render() {
 /* 日誌 */
 function renderDaily() {
   const entries = entriesAt({ view: 'daily', date: curDate });
-  $main.innerHTML = `
+  const overdue = overdueTasks(curDate);
+  const dayCard = `
   <div class="card">
     <h2>
       <span class="navbar-date">
@@ -634,9 +807,29 @@ function renderDaily() {
     <div class="legend">
       <span><b>•</b>任務</span><span><b>✕</b>完成</span><span><b>&gt;</b>轉移</span>
       <span><b>&lt;</b>排程</span><span><b>○</b>事件</span><span><b>–</b>筆記</span>
-      <span style="margin-left:auto">滑鼠移到項目上可操作：完成／轉移／排程／捨棄</span>
+      <span style="margin-left:auto">滑鼠移到項目上可操作：完成／轉移／捨棄</span>
     </div>
   </div>`;
+  const remindCard = overdue.length ? `
+  <div class="card">
+    <h2>⏰ 未處理任務提醒 <span class="hint">這一天之前累積、還沒完成的任務（共 ${overdue.length} 筆）</span></h2>
+    <div style="max-height:480px;overflow-y:auto">
+      <ul class="entries">${overdue.map(e => `<li>
+        ${selCellHtml(e)}
+        <span class="sym task" title="未完成任務">•</span>
+        <span class="etext">${esc(e.text)}</span>
+        <span class="eloc">${esc(locLabel(e.loc))}</span>
+        <span class="eacts" style="opacity:1">
+          <button onclick="doComplete('${e.id}')" title="其實已經做完了">✕ 完成</button>
+          <button onclick="doMigrateHere('${e.id}')" title="轉移到目前顯示的這一天">&gt; 移到這天</button>
+          <button onclick="openMigrateDlg('${e.id}')" title="轉移到其他日期、月誌或未來誌">&gt; 轉移…</button>
+          <button onclick="doCancel('${e.id}')" title="不再重要，畫刪除線捨棄">～ 捨棄</button>
+        </span>
+      </li>`).join('')}</ul>
+    </div>
+    <p style="font-size:.78rem;color:var(--ink-soft);margin-top:8px">處理後就不會再出現在提醒裡。也可以到「月末轉移」分頁一次盤點。</p>
+  </div>`: '';
+  $main.innerHTML = remindCard ? `<div class="two-col">${dayCard}${remindCard}</div>` : dayCard;
 }
 function qaDaily() {
   const { type, text } = readQuickAdd();
@@ -1096,6 +1289,26 @@ function renderStats() {
     ${statsMode === 'month' ? statsMonth() : statsYear()}
   </div>`;
 }
+/* 統計頁的任務清單（已完成／未完成，可收合） */
+function statsTaskList(title, list, sym, cls, openByDefault) {
+  const items = list.map(e => `<li>
+    <span class="selph"></span>
+    <span class="sym ${cls}">${sym}</span>
+    <span class="etext${cls === 'done' ? ' done' : ''}">${esc(e.text)}</span>
+    <span class="eloc">${esc(locLabel(e.loc))}</span></li>`).join('');
+  return `<details style="margin-top:14px" ${openByDefault ? 'open' : ''}>
+    <summary style="cursor:pointer;font-size:.92rem;font-weight:600">${title}（${list.length} 筆）</summary>
+    ${list.length
+      ? `<div style="max-height:360px;overflow-y:auto"><ul class="entries" style="margin-top:6px">${items}</ul></div>`
+      : `<div class="empty">（沒有任務）</div>`}
+  </details>`;
+}
+function statsTaskLists(entries) {
+  const tasks = entries.filter(e => e.type === 'task');
+  return statsTaskList('✕ 已完成任務清單', tasks.filter(e => e.status === 'done'), '✕', 'done', false)
+       + statsTaskList('• 未完成任務清單', tasks.filter(e => e.status === 'open'), '•', 'task', false);
+}
+
 const STAT_SERIES = [
   { key: 'done', name: '完成任務', color: '#8a9a5b' },
   { key: 'other', name: '其他任務', color: '#6b6357' },
@@ -1130,16 +1343,20 @@ function statsMonth() {
   return monthNavHtml() +
     (t.total ? '' : `<div class="empty" style="margin-bottom:10px">${fmtMonth(curMonth)} 沒有任何紀錄。</div>`) +
     `<div class="stat-cards">${cards}</div>
-     <p style="font-size:.78rem;color:var(--ink-soft);margin-top:10px">完成率 ＝ 已完成 ÷（任務總數 － 已捨棄）</p>` + chart;
+     <p style="font-size:.78rem;color:var(--ink-soft);margin-top:10px">完成率 ＝ 已完成 ÷（任務總數 － 已捨棄）</p>` + chart +
+    statsTaskLists(entriesForMonth(curMonth));
 }
 function statsYear() {
   const yt = { task: 0, done: 0, open: 0, migrated: 0, scheduled: 0, cancelled: 0, event: 0, note: 0 };
   const labels = [];
   const data = { done: [], other: [], event: [], note: [] };
+  const yearEntries = [];
   let rows = '';
   for (let m = 1; m <= 12; m++) {
     const ms = `${curYear}-${pad(m)}`;
-    const t = tally(entriesForMonth(ms));
+    const monthEntries = entriesForMonth(ms);
+    yearEntries.push(...monthEntries);
+    const t = tally(monthEntries);
     Object.keys(yt).forEach(k => yt[k] += t[k]);
     labels.push(`${m}月`);
     data.done.push(t.done);
@@ -1161,7 +1378,7 @@ function statsYear() {
     ${rows}
     <tr class="total"><td class="l">全年合計</td><td>${yt.task}</td><td>${yt.done}</td><td>${yt.open}</td>
       <td>${yt.migrated + yt.scheduled}</td><td>${yt.cancelled}</td><td>${yrate}</td><td>${yt.event}</td><td>${yt.note}</td></tr>
-  </table></div>` + chart;
+  </table></div>` + chart + statsTaskLists(yearEntries);
 }
 
 /* 索引 */
